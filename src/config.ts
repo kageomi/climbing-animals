@@ -26,6 +26,8 @@ export const CFG = {
 
   /** Surface of the water at the bottom of the world. */
   waterY: 100,
+  /** Top of the drawn waves; touching this counts as being in the water. */
+  waterSurfaceY: 90,
   /** Both animals must stay in the water this long (ticks) for game over. */
   drownTicks: 20,
 

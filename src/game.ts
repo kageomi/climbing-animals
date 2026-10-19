@@ -33,7 +33,10 @@ export interface Animal {
   anchored: boolean;
   contacts: number;
   gripContacts: number;
+  /** Centre is below the surface: buoyancy applies and jumping is impossible. */
   inWater: boolean;
+  /** Any part touches the visible water; both touching means game over. */
+  touchingWater: boolean;
   pendingBounce: boolean;
   /** Lowest point at the end of the previous tick (for one-way platforms). */
   lastBottom: number;
@@ -141,10 +144,11 @@ export class Game {
     this.maxHeight = Math.max(this.maxHeight, Math.floor((START_Y - top) / CFG.meter));
     this.streamWorld(top - 1500);
 
-    if (this.animals.every((a) => a.inWater)) {
+    // Bobbing at the surface briefly lifts animals out, so the timer decays instead of resetting.
+    if (this.animals.every((a) => a.touchingWater)) {
       if (++this.drownTimer >= CFG.drownTicks) this.state = 'over';
     } else {
-      this.drownTimer = 0;
+      this.drownTimer = Math.max(0, this.drownTimer - 1);
     }
   }
 
@@ -157,6 +161,7 @@ export class Game {
       this.release(a);
       a.grip = false;
       a.inWater = false;
+      a.touchingWater = false;
       Body.setPosition(a.body, { x: xs[i], y });
       Body.setVelocity(a.body, { x: 0, y: 0 });
       Body.setAngle(a.body, 0);
@@ -210,6 +215,7 @@ export class Game {
       contacts: 0,
       gripContacts: 0,
       inWater: false,
+      touchingWater: false,
       pendingBounce: false,
       lastBottom: body.bounds.max.y,
     };
@@ -317,6 +323,7 @@ export class Game {
 
   private applyWater(a: Animal): void {
     a.inWater = a.body.position.y > CFG.waterY;
+    a.touchingWater = a.body.bounds.max.y > CFG.waterSurfaceY;
     if (!a.inWater || a.anchored) return;
     const v = a.body.velocity;
     // Buoyancy slightly stronger than gravity plus heavy damping: animals bob at the surface.
