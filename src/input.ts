@@ -14,8 +14,11 @@ interface Touch {
  * Slingshot controls. Holding a finger down grips; dragging aims (opposite to
  * the drag, like a slingshot); releasing jumps. In solo mode each finger takes
  * the animal nearest to where it touched, so two fingers can steer both.
+ * Online, every touch steers the player's own animal.
  */
-export class SoloInput {
+export class SlingshotInput {
+  /** Animal this device controls, or null to control both (solo). */
+  own: number | null = null;
   private touches = new Map<number, Touch>();
 
   constructor(
@@ -53,7 +56,7 @@ export class SoloInput {
     e.preventDefault();
     this.el.setPointerCapture(e.pointerId);
     const taken = new Set([...this.touches.values()].map((t) => t.animal));
-    const free = game.animals.map((_, i) => i).filter((i) => !taken.has(i));
+    const free = game.animals.map((_, i) => i).filter((i) => !taken.has(i) && (this.own === null || i === this.own));
     if (free.length === 0) return;
     const p = this.renderer.screenToWorld(e.clientX, e.clientY);
     const dist = (i: number) => Math.hypot(game.animals[i].body.position.x - p.x, game.animals[i].body.position.y - p.y);

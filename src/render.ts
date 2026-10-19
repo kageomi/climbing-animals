@@ -51,7 +51,8 @@ export class Renderer {
     this.camY = snap ? target : this.camY + (target - this.camY) * 0.08;
   }
 
-  draw(game: Game, aims: Aim[]): void {
+  /** `own` marks the local player's animal in online games. */
+  draw(game: Game, aims: Aim[], own: number | null = null): void {
     const g = this.g;
     const halfH = this.height / 2 / this.scale;
     const top = this.camY - halfH - 40;
@@ -76,6 +77,7 @@ export class Renderer {
     this.drawWaves(game);
     this.drawRope(game);
     for (const a of game.animals) this.drawAnimal(a);
+    if (own !== null) this.drawOwnMarker(game.animals[own].body.position);
     for (const aim of aims) this.drawAim(game, aim);
     this.drawWater(bottom);
 
@@ -158,6 +160,21 @@ export class Renderer {
     const s = CFG.animalSize;
     g.drawImage(sprite(a.emoji), a.spriteOffset.x - s / 2, a.spriteOffset.y - s / 2, s, s);
     g.restore();
+  }
+
+  private drawOwnMarker(p: { x: number; y: number }): void {
+    const g = this.g;
+    const y = p.y - CFG.animalSize * 0.75;
+    g.beginPath();
+    g.moveTo(p.x - 7, y - 8);
+    g.lineTo(p.x + 7, y - 8);
+    g.lineTo(p.x, y);
+    g.closePath();
+    g.fillStyle = '#fff';
+    g.strokeStyle = 'rgba(0,0,0,0.35)';
+    g.lineWidth = 1.5;
+    g.fill();
+    g.stroke();
   }
 
   private drawAim(game: Game, aim: Aim): void {

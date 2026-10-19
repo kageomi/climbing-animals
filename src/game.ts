@@ -22,6 +22,18 @@ export type Command =
   | { type: 'grip'; animal: number; on: boolean }
   | { type: 'jump'; animal: number; vx: number; vy: number };
 
+export interface Snapshot {
+  tick: number;
+  over: boolean;
+  height: number;
+  /** Index of the checkpoint platform in `platforms`, or -1. */
+  cp: number;
+  /** flags: 1 anchored, 2 grip, 4 in water, 8 touching ground. */
+  animals: { x: number; y: number; angle: number; flags: number }[];
+  /** Rope segment positions as [x0, y0, x1, y1, …]. */
+  rope: number[];
+}
+
 export interface Animal {
   body: Body;
   emoji: string;
@@ -175,6 +187,48 @@ export class Game {
     });
     this.drownTimer = 0;
     this.state = 'play';
+  }
+
+  /** Compact state the host sends to the guest (positions rounded to 0.1). */
+  snapshot(): Snapshot {
+    const r = (v: number) => Math.round(v * 10) / 10;
+    return {
+      tick: this.tick,
+      over: this.state === 'over',
+      height: this.maxHeight,
+      cp: this.checkpoint ? this.platforms.indexOf(this.checkpoint) : -1,
+      animals: this.animals.map((a) => ({
+        x: r(a.body.position.x),
+        y: r(a.body.position.y),
+        angle: Math.round(a.body.angle * 1000) / 1000,
+        flags: (a.anchored ? 1 : 0) | (a.grip ? 2 : 0) | (a.inWater ? 4 : 0) | (a.contacts > 0 ? 8 : 0),
+      })),
+      rope: this.rope.flatMap((s) => [r(s.position.x), r(s.position.y)]),
+    };
+  }
+
+  /**
+   * Guest side: mirrors the host's state without simulating. The world is
+   * regenerated locally from the shared seed, so only moving parts are synced.
+   */
+  applySnapshot(s: Snapshot): void {
+    this.tick = s.tick;
+    this.state = s.over ? 'over' : 'play';
+    this.maxHeight = s.height;
+    s.animals.forEach((sa, i) => {
+      const a = this.animals[i];
+      Body.setPosition(a.body, { x: sa.x, y: sa.y });
+      Body.setAngle(a.body, sa.angle);
+      a.anchored = (sa.flags & 1) !== 0;
+      a.grip = (sa.flags & 2) !== 0;
+      a.inWater = (sa.flags & 4) !== 0;
+      a.contacts = (sa.flags & 8) !== 0 ? 1 : 0;
+    });
+    this.rope.forEach((seg, i) => Body.setPosition(seg, { x: s.rope[i * 2], y: s.rope[i * 2 + 1] }));
+    const top = Math.min(...s.animals.map((a) => a.y));
+    this.streamWorld(top - 1500);
+    while (s.cp >= this.platforms.length) this.streamWorld(this.generatedTo - 500);
+    this.checkpoint = s.cp >= 0 ? this.platforms[s.cp] : null;
   }
 
   beePosition(h: HazardDef): Vector {
