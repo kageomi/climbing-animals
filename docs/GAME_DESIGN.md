@@ -88,3 +88,10 @@ Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher 
 - Statisches vs. steigendes Wasser
 - Normalisierung der Emoji-Formen
 - Netzwerk-Latenz-Gefühl beim Gast (ggf. Client-Prediction für das eigene Tier)
+
+## 10. Umsetzungsstand
+
+- ✅ Solo-Prototyp: Steuerung, Seil (Glieder, elastisch, kollidiert mit Plattformen), Festhalten, Emoji-Form-Physik, Zonen, Materialien, Gefahren, Wasser, Checkpoints, Höhen-Score + lokaler Highscore
+- ✅ GitHub-Pages-Deploy per Actions
+- ⬜ Online-Koop (WebRTC/PeerJS, Einladungslink/QR, Host-Autorität)
+- ⬜ Balancing per Playtest
