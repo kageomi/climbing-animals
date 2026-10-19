@@ -47,7 +47,7 @@ export interface Animal {
   gripContacts: number;
   /** Centre is below the surface: buoyancy applies and jumping is impossible. */
   inWater: boolean;
-  /** Any part touches the visible water; both touching means game over. */
+  /** Any part touches the visible water; this ends the round. */
   touchingWater: boolean;
   pendingBounce: boolean;
   /** Lowest point at the end of the previous tick (for one-way platforms). */
@@ -156,8 +156,9 @@ export class Game {
     this.maxHeight = Math.max(this.maxHeight, Math.floor((START_Y - top) / CFG.meter));
     this.streamWorld(top - 1500);
 
-    // Bobbing at the surface briefly lifts animals out, so the timer decays instead of resetting.
-    if (this.animals.every((a) => a.touchingWater)) {
+    // Either animal touching the water ends the round. Bobbing at the surface briefly
+    // lifts animals out, so the timer decays instead of resetting.
+    if (this.animals.some((a) => a.touchingWater)) {
       if (++this.drownTimer >= CFG.drownTicks) this.state = 'over';
     } else {
       this.drownTimer = Math.max(0, this.drownTimer - 1);
