@@ -22,7 +22,7 @@ Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 - Die **Form des Emojis** wird zum Kollisionskörper (konvexe Hülle der Silhouette).
 - Zonen: Teich 🪷 → Wald 🌲 → Berg 🪨 → Himmel ☁️
 - 🍄 Trampolin, 🧊 rutschig, ☁️ von unten durchspringbar, 🐝 / 🌵 stoßen weg
-- 🚩 Checkpoint alle 50 m. Liegen beide Tiere im Wasser 🌊 → Game Over → Neustart am Checkpoint
+- 🚩 Checkpoint alle 50 m. Berührt ein Tier das Wasser 🌊 → Game Over → Neustart am Checkpoint
 
 ## Entwicklung
 

@@ -28,8 +28,8 @@ export const CFG = {
   waterY: 100,
   /** Top of the drawn waves; touching this counts as being in the water. */
   waterSurfaceY: 90,
-  /** Both animals must stay in the water this long (ticks) for game over. */
-  drownTicks: 20,
+  /** An animal must touch the water this long (ticks) for game over; a short splash before the screen. */
+  drownTicks: 8,
 
   checkpointEvery: 50, // m
   mushroomBounce: 15,

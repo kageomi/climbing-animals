@@ -61,8 +61,7 @@ Keine Buttons. Ein Finger pro Spieler (auf dem eigenen Gerät).
 
 - **Boden = Wasser 🌊**, bleibt zunächst **unten** (statisch).
   - **(offen)** Wenn es sich besser anfühlt: steigendes Wasser als Zeitdruck.
-- Fällt **ein** Tier ins Wasser, gibt es noch eine Chance (der Partner kann es herausziehen).
-- **Berühren beide das Wasser → Game Over.**
+- **Berührt ein Tier das Wasser → Game Over.** (Ursprünglich: erst wenn beide im Wasser sind – nach dem ersten Playtest verschärft.)
 - **Checkpoints 🚩**: Flagge auf breiter Plattform alle ~X Meter.
   - **(offen)** Wert X; ob das Wasser unter dem Checkpoint mit nachrückt; ob es begrenzte Leben ❤️ gibt.
 - **Score: maximale Höhe in Metern.**
