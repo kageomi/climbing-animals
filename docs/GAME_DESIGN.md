@@ -93,5 +93,7 @@ Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher 
 
 - ✅ Solo-Prototyp: Steuerung, Seil (Glieder, elastisch, kollidiert mit Plattformen), Festhalten, Emoji-Form-Physik, Zonen, Materialien, Gefahren, Wasser, Checkpoints, Höhen-Score + lokaler Highscore
 - ✅ GitHub-Pages-Deploy per Actions
-- ⬜ Online-Koop (WebRTC/PeerJS, Einladungslink/QR, Host-Autorität)
+- ✅ Online-Koop: WebRTC/PeerJS, Einladungslink + QR + Raum-Code, Host-Autorität mit Snapshot-Interpolation, Heartbeat/Disconnect-Erkennung
+- ⬜ Client-Prediction für das eigene Tier des Gastes (falls sich die Latenz schlecht anfühlt)
+- ⬜ TURN-Fallback prüfen, falls sich manche Handys nicht verbinden können
 - ⬜ Balancing per Playtest

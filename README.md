@@ -4,22 +4,25 @@ Physikbasiertes Koop-Kletterspiel für den Smartphone-Browser: Zwei Tier-Emojis 
 
 Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 
-## Status: Solo-Prototyp
+## Spielmodi
 
-Ein Gerät steuert beide Tiere (Online-Koop folgt später).
+- **▶️ Solo**: Ein Gerät steuert beide Tiere.
+- **👥 Online zu zweit**: Jeder spielt auf seinem eigenen Handy.
+  1. Spieler A tippt 👥 → es erscheinen QR-Code, Raum-Code und 📤 (Link teilen).
+  2. Spieler B scannt den QR-Code oder öffnet den Link, wählt sein Tier und tippt ▶️.
+  3. Das Spiel startet auf beiden Geräten. ▼ markiert das eigene Tier; jede Berührung steuert nur das eigene Tier.
 
 | Geste | Wirkung |
 |---|---|
 | Finger halten | Das nächstgelegene Tier krallt sich fest (nicht auf 🧊 / 🍄) |
 | Finger ziehen | Zielen – Sprung geht entgegen der Zugrichtung, Länge = Kraft |
 | Loslassen | Springen (nur mit Halt, nicht aus dem Wasser) |
-| Zwei Finger | Jeder Finger steuert ein Tier |
+| Zwei Finger (Solo) | Jeder Finger steuert ein Tier |
 
 - Die **Form des Emojis** wird zum Kollisionskörper (konvexe Hülle der Silhouette).
 - Zonen: Teich 🪷 → Wald 🌲 → Berg 🪨 → Himmel ☁️
 - 🍄 Trampolin, 🧊 rutschig, ☁️ von unten durchspringbar, 🐝 / 🌵 stoßen weg
 - 🚩 Checkpoint alle 50 m. Liegen beide Tiere im Wasser 🌊 → Game Over → Neustart am Checkpoint
-- `?seed=123` in der URL fixiert die Welt (zum Debuggen)
 
 ## Entwicklung
 
@@ -38,11 +41,20 @@ src/
   world.ts    Prozedurale Welt aus Seed, Zonen & Materialien
   emoji.ts    Emoji-Sprites und Silhouette → Kollisionskörper
   render.ts   Canvas-Rendering, Kamera, Zielvorschau
-  input.ts    Slingshot-Touch-Steuerung (Solo)
-  main.ts     Menü, Game-Loop (fester 60-Hz-Takt)
+  input.ts    Slingshot-Touch-Steuerung (Solo: beide Tiere, online: eigenes Tier)
+  net.ts      Online-Verbindung (PeerJS/WebRTC), Heartbeat, Snapshot-Interpolation
+  main.ts     Menü, Lobby, Game-Loop (fester 60-Hz-Takt)
 ```
 
-Die Simulation wird nur über `Command`s verändert (`grip` / `jump`) und läuft im festen Takt – so kann der Host im Online-Modus später die Commands des Gastes einfach mit anwenden.
+### Online-Architektur
+
+- **Verbindung**: WebRTC Peer-to-Peer über [PeerJS](https://peerjs.com/). Der kostenlose öffentliche PeerJS-Server vermittelt nur den Verbindungsaufbau; danach laufen die Daten direkt zwischen den Handys.
+- **Host-Autorität**: Das einladende Gerät (Tier 0) simuliert die Physik. Der Gast schickt nur seine `Command`s (`grip` / `jump`) für Tier 1 und bekommt ~30 Snapshots pro Sekunde zurück.
+- **Gleiche Welt**: Beide erzeugen die Welt aus demselben Seed; synchronisiert werden nur Tiere, Seil, Tick, Checkpoint und Spielstatus.
+- **Glättung**: Der Gast rendert ~100 ms in der Vergangenheit und interpoliert zwischen Snapshots.
+- **Verbindungsabbruch**: Ping jede Sekunde; nach 6 s Stille oder beim Schließen der Seite sieht der Partner 🔌.
+
+Debug-Parameter: `?seed=123` fixiert die Welt, `?peer=127.0.0.1:9000` nutzt einen eigenen PeerServer (z. B. `npx peerjs --port 9000`).
 
 ## Deployment
 

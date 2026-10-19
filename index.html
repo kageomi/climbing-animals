@@ -21,16 +21,55 @@
         <span class="rope-icon">〰️</span>
         <button class="pick" data-slot="1">🐵</button>
       </div>
-      <button id="start" class="big">▶️</button>
+      <div class="row">
+        <button id="start" class="big" aria-label="Solo">▶️</button>
+        <button id="online" class="big" aria-label="Online zu zweit">👥</button>
+      </div>
+    </div>
+
+    <!-- Host: waits for the partner, shares the invite link / QR code -->
+    <div id="lobby" class="overlay hidden">
+      <div class="pair">
+        <span class="me" data-me>🐸</span>
+        <span class="rope-icon">〰️</span>
+        <span class="me waiting">❔</span>
+      </div>
+      <div id="qr" class="qr"></div>
+      <div id="room-code" class="code"></div>
+      <div class="row">
+        <button id="share" class="big" aria-label="Link teilen">📤</button>
+        <button id="lobby-cancel" class="big" aria-label="Abbrechen">✖️</button>
+      </div>
+      <div id="lobby-status" class="status">⏳</div>
+    </div>
+
+    <!-- Guest: opened an invite link -->
+    <div id="join" class="overlay hidden">
+      <div class="pair">
+        <span class="me">👥</span>
+        <span class="rope-icon">〰️</span>
+        <button class="pick" data-slot="0">🐸</button>
+      </div>
+      <div class="row">
+        <button id="join-go" class="big" aria-label="Beitreten">▶️</button>
+        <button id="join-cancel" class="big" aria-label="Abbrechen">✖️</button>
+      </div>
+      <div id="join-status" class="status"></div>
     </div>
 
     <div id="over" class="overlay hidden">
       <div class="splash">💦</div>
       <div id="over-height" class="score"></div>
       <div class="row">
-        <button id="retry" class="big">🚩</button>
-        <button id="home" class="big">🏠</button>
+        <button id="retry" class="big" aria-label="Ab Checkpoint">🚩</button>
+        <button id="home" class="big" aria-label="Menü">🏠</button>
       </div>
+    </div>
+
+    <!-- Partner disconnected -->
+    <div id="lost" class="overlay hidden">
+      <div class="splash">🔌</div>
+      <button id="lost-home" class="big" aria-label="Menü">🏠</button>
     </div>
 
     <script type="module" src="./src/main.ts"></script>
