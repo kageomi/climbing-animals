@@ -32,7 +32,10 @@ export const CFG = {
   drownTicks: 8,
 
   checkpointEvery: 50, // m
-  mushroomBounce: 15,
+  /** Jumps from a mushroom are this much stronger. */
+  mushroomBoost: 1.4,
+  /** Fraction of the landing speed a mushroom gives back. */
+  mushroomRestitution: 0.6,
   hazardKnock: 10,
   hazardRadius: 26,
 } as const;

@@ -21,8 +21,9 @@ Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 
 - Die **Form des Emojis** wird zum Kollisionskörper (konvexe Hülle der Silhouette).
 - Zonen: Teich 🪷 → Wald 🌲 → Berg 🪨 → Himmel ☁️
-- 🍄 Trampolin, 🧊 rutschig, ☁️ von unten durchspringbar, 🐝 / 🌵 stoßen weg
+- 🍄 Sprungplattform (+40 % Sprungkraft), 🧊 rutschig, ☁️ von unten durchspringbar, 🐝 / 🌵 stoßen weg
 - 🚩 Checkpoint alle 50 m. Berührt ein Tier das Wasser 🌊 → Game Over → Neustart am Checkpoint
+- Jede Welt ist **garantiert kletterbar** und wird bis 300 m schwerer (siehe [Leveldesign](docs/GAME_DESIGN.md#leveldesign-garantiert-kletterbar-schwerer-mit-der-höhe))
 
 ## Entwicklung
 
@@ -30,6 +31,7 @@ Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 npm install
 npm run dev        # Dev-Server (auch im LAN erreichbar → mit dem Handy testen)
 npm run build      # Typecheck + Produktions-Build nach dist/
+npm run check:levels   # 200 Welten erzeugen und prüfen, dass jeder Schritt schaffbar ist
 ```
 
 Stack: Vite + TypeScript + [Matter.js](https://brm.io/matter-js/), Rendering mit Canvas 2D.
@@ -38,7 +40,9 @@ Stack: Vite + TypeScript + [Matter.js](https://brm.io/matter-js/), Rendering mit
 src/
   config.ts   Tuning-Werte (Sprungkraft, Seil, Wasser …)
   game.ts     Simulation (Matter.js), Commands, Seil, Festhalten, Gefahren
-  world.ts    Prozedurale Welt aus Seed, Zonen & Materialien
+  world.ts    Prozedurale Welt aus Seed: verifizierter Hauptweg, Zonen & Materialien
+  jumpsim.ts  Sprung-Simulator für den Generator (Spielphysik nachgebildet)
+  worldWorker.ts / workerFeed.ts  Generator läuft in einem Web Worker (kein Ruckeln)
   emoji.ts    Emoji-Sprites und Silhouette → Kollisionskörper
   render.ts   Canvas-Rendering, Kamera, Zielvorschau
   input.ts    Slingshot-Touch-Steuerung (Solo: beide Tiere, online: eigenes Tier)

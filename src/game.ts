@@ -2,8 +2,12 @@ import Matter, { Bodies, Body, Composite, Constraint, Engine, Events, Vertices }
 import type { IEventCollision, Pair, Vector } from 'matter-js';
 import { CFG, TICK_MS } from './config';
 import { emojiHull } from './emoji';
-import { MATERIALS, WorldGen } from './world';
-import type { HazardDef, Material, PlatformDef, WallDef } from './world';
+import { LocalFeed, MATERIALS } from './world';
+import type { Chunk, HazardDef, Material, PlatformDef, WallDef, WorldFeed } from './world';
+
+/** How far above the animals the world is kept generated, and the batch size for more. */
+const WORLD_AHEAD = 3000;
+const WORLD_BATCH = 300;
 
 /** Animals' resting height on the start platform; height is measured from here. */
 const START_Y = -30;
@@ -28,7 +32,7 @@ export interface Snapshot {
   height: number;
   /** Index of the checkpoint platform in `platforms`, or -1. */
   cp: number;
-  /** flags: 1 anchored, 2 grip, 4 in water, 8 touching ground. */
+  /** flags: 1 anchored, 2 grip, 4 in water, 8 touching ground, 16 on a mushroom. */
   animals: { x: number; y: number; angle: number; flags: number }[];
   /** Rope segment positions as [x0, y0, x1, y1, …]. */
   rope: number[];
@@ -49,7 +53,10 @@ export interface Animal {
   inWater: boolean;
   /** Any part touches the visible water; this ends the round. */
   touchingWater: boolean;
-  pendingBounce: boolean;
+  /** Standing on a mushroom: the next jump is boosted. */
+  onBouncy: boolean;
+  /** Upward speed to apply after a mushroom landing this tick (0 = none). */
+  pendingBounce: number;
   /** Lowest point at the end of the previous tick (for one-way platforms). */
   lastBottom: number;
 }
@@ -92,14 +99,16 @@ export class Game {
   maxHeight = 0;
   checkpoint: PlatformDef | null = null;
 
-  private gen: WorldGen;
-  private generatedTo = 0;
+  private feed: WorldFeed;
+  /** Lowest y (highest point) the world has been requested up to; 0 = nothing yet. */
+  private requestedTo = 0;
   private drownTimer = 0;
 
-  constructor(emojis: [string, string], seed: number) {
+  constructor(emojis: [string, string], seed: number, feed: WorldFeed = new LocalFeed(seed)) {
     this.engine = Engine.create({ positionIterations: 8, velocityIterations: 6, constraintIterations: 4 });
-    this.gen = new WorldGen(seed);
-    this.streamWorld(-1500);
+    this.feed = feed;
+    feed.onChunk = (chunk) => this.addChunk(chunk);
+    this.streamWorld(-WORLD_AHEAD);
 
     this.animals = emojis.map((emoji, index) => this.createAnimal(emoji, index, (index === 0 ? -40 : 40), -40));
     this.createRope();
@@ -120,9 +129,14 @@ export class Game {
     if (!this.canJump(a)) return;
     this.release(a);
     const speed = Math.hypot(cmd.vx, cmd.vy);
-    const k = speed > CFG.jumpMaxSpeed ? CFG.jumpMaxSpeed / speed : 1;
+    const k = (speed > CFG.jumpMaxSpeed ? CFG.jumpMaxSpeed / speed : 1) * this.jumpBoost(a);
     Body.setVelocity(a.body, { x: cmd.vx * k, y: cmd.vy * k });
     Body.setAngularVelocity(a.body, 0);
+  }
+
+  /** Mushrooms act as jump pads. */
+  jumpBoost(a: Animal): number {
+    return a.onBouncy ? CFG.mushroomBoost : 1;
   }
 
   canJump(a: Animal): boolean {
@@ -130,19 +144,25 @@ export class Game {
   }
 
   /** Advances the simulation by one fixed tick. */
+  /** False until the first part of the world has arrived from the feed. */
+  get ready(): boolean {
+    return this.platforms.length > 0;
+  }
+
   step(): void {
-    if (this.state !== 'play') return;
+    if (this.state !== 'play' || !this.ready) return;
     for (const a of this.animals) {
       a.contacts = 0;
       a.gripContacts = 0;
-      a.pendingBounce = false;
+      a.onBouncy = false;
+      a.pendingBounce = 0;
     }
 
     Engine.update(this.engine, TICK_MS);
     this.tick++;
 
     for (const a of this.animals) {
-      if (a.pendingBounce && !a.anchored) Body.setVelocity(a.body, { x: a.body.velocity.x, y: -CFG.mushroomBounce });
+      if (a.pendingBounce && !a.anchored) Body.setVelocity(a.body, { x: a.body.velocity.x, y: -a.pendingBounce });
       if (a.grip && !a.anchored && a.gripContacts > 0 && !a.inWater) {
         a.anchored = true;
         Body.setStatic(a.body, true);
@@ -154,7 +174,7 @@ export class Game {
 
     const top = Math.min(...this.animals.map((a) => a.body.position.y));
     this.maxHeight = Math.max(this.maxHeight, Math.floor((START_Y - top) / CFG.meter));
-    this.streamWorld(top - 1500);
+    this.streamWorld(top - WORLD_AHEAD);
 
     // Either animal touching the water ends the round. Bobbing at the surface briefly
     // lifts animals out, so the timer decays instead of resetting.
@@ -202,7 +222,7 @@ export class Game {
         x: r(a.body.position.x),
         y: r(a.body.position.y),
         angle: Math.round(a.body.angle * 1000) / 1000,
-        flags: (a.anchored ? 1 : 0) | (a.grip ? 2 : 0) | (a.inWater ? 4 : 0) | (a.contacts > 0 ? 8 : 0),
+        flags: (a.anchored ? 1 : 0) | (a.grip ? 2 : 0) | (a.inWater ? 4 : 0) | (a.contacts > 0 ? 8 : 0) | (a.onBouncy ? 16 : 0),
       })),
       rope: this.rope.flatMap((s) => [r(s.position.x), r(s.position.y)]),
     };
@@ -224,12 +244,14 @@ export class Game {
       a.grip = (sa.flags & 2) !== 0;
       a.inWater = (sa.flags & 4) !== 0;
       a.contacts = (sa.flags & 8) !== 0 ? 1 : 0;
+      a.onBouncy = (sa.flags & 16) !== 0;
     });
     this.rope.forEach((seg, i) => Body.setPosition(seg, { x: s.rope[i * 2], y: s.rope[i * 2 + 1] }));
     const top = Math.min(...s.animals.map((a) => a.y));
-    this.streamWorld(top - 1500);
-    while (s.cp >= this.platforms.length) this.streamWorld(this.generatedTo - 500);
-    this.checkpoint = s.cp >= 0 ? this.platforms[s.cp] : null;
+    this.streamWorld(top - WORLD_AHEAD);
+    // The host's checkpoint may lie in a part of the world that hasn't arrived yet.
+    if (s.cp >= this.platforms.length) this.streamWorld(this.requestedTo - 1000);
+    this.checkpoint = s.cp >= 0 ? (this.platforms[s.cp] ?? this.checkpoint) : null;
   }
 
   beePosition(h: HazardDef): Vector {
@@ -238,6 +260,7 @@ export class Game {
 
   destroy(): void {
     pairFilter = null;
+    this.feed.dispose();
     Composite.clear(this.engine.world, false, true);
     Engine.clear(this.engine);
   }
@@ -271,7 +294,8 @@ export class Game {
       gripContacts: 0,
       inWater: false,
       touchingWater: false,
-      pendingBounce: false,
+      onBouncy: false,
+      pendingBounce: 0,
       lastBottom: body.bounds.max.y,
     };
   }
@@ -301,10 +325,14 @@ export class Game {
     return Constraint.create({ bodyA, bodyB, length, stiffness: CFG.ropeStiffness, damping: CFG.ropeDamping });
   }
 
+  /** Requests more world once the buffer above the animals runs low, in batches. */
   private streamWorld(yTop: number): void {
-    if (yTop >= this.generatedTo) return;
-    this.generatedTo = yTop;
-    const chunk = this.gen.generateUpTo(yTop);
+    if (this.requestedTo !== 0 && yTop >= this.requestedTo - WORLD_BATCH) return;
+    this.requestedTo = yTop;
+    this.feed.request(yTop);
+  }
+
+  private addChunk(chunk: Chunk): void {
     for (const p of chunk.platforms) this.addPlatform(p);
     for (const w of chunk.walls) this.addWalls(w);
     this.hazards.push(...chunk.hazards);
@@ -315,7 +343,8 @@ export class Game {
     const body = Bodies.rectangle(def.x, def.y, def.tiles * CFG.tile, CFG.tile * 0.9, {
       isStatic: true,
       friction: mat.friction,
-      frictionStatic: mat.friction === 0 ? 0 : 1,
+      // Slippery surfaces (ice) get no extra grip when standing still.
+      frictionStatic: mat.friction < 0.1 ? mat.friction : 1,
       collisionFilter: mat.oneWay ? { category: CAT_CLOUD, mask: CAT_ANIMAL } : { category: CAT_PLATFORM, mask: CAT_ANIMAL | CAT_ROPE },
       plugin: { tag: { kind: 'platform', def, mat } satisfies BodyTag },
     });
@@ -371,7 +400,14 @@ export class Game {
       const { def, mat } = tag(platformBody) as PlatformBody;
       a.contacts++;
       if (mat.grippable) a.gripContacts++;
-      if (started && mat.bouncy && a.body.position.y < platformBody.position.y - CFG.tile / 2) a.pendingBounce = true;
+      if (mat.bouncy) {
+        a.onBouncy = true;
+        // Landings spring back but lose energy, so animals come to rest on the mushroom.
+        const impact = a.body.velocity.y;
+        if (started && impact > 2 && a.body.position.y < platformBody.position.y - CFG.tile / 2) {
+          a.pendingBounce = impact * CFG.mushroomRestitution;
+        }
+      }
       if (def.checkpoint && this.checkpoint !== def && (!this.checkpoint || def.y < this.checkpoint.y)) this.checkpoint = def;
     }
   }

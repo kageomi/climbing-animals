@@ -41,7 +41,10 @@ export class SlingshotInput {
     const out: Aim[] = [];
     for (const t of this.touches.values()) {
       const v = this.velocity(t);
-      if (v) out.push({ animal: t.animal, vx: v.x, vy: v.y, canJump: game.canJump(game.animals[t.animal]) });
+      if (!v) continue;
+      const a = game.animals[t.animal];
+      const boost = game.jumpBoost(a);
+      out.push({ animal: t.animal, vx: v.x * boost, vy: v.y * boost, canJump: game.canJump(a) });
     }
     return out;
   }
