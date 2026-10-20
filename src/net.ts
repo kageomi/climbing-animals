@@ -12,7 +12,9 @@ export type Message =
   /** Host → guest: authoritative state. */
   | { t: 'snap'; s: Snapshot }
   /** Guest → host: restart from the checkpoint after game over. */
-  | { t: 'retry' };
+  | { t: 'retry' }
+  /** Guest → host: start a fresh world after game over, staying connected. */
+  | { t: 'newStage' };
 
 /** Link-level messages handled inside Session. */
 type Control = { t: 'ping' } | { t: 'bye' };

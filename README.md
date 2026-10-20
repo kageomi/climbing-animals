@@ -22,7 +22,7 @@ Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 - Die **Form des Emojis** wird zum Kollisionskörper (konvexe Hülle der Silhouette).
 - Zonen: Teich 🪷 → Wald 🌲 → Berg 🪨 → Himmel ☁️
 - 🍄 Sprungplattform (+40 % Sprungkraft), 🧊 rutschig, ☁️ von unten durchspringbar, 🐝 / 🌵 stoßen weg
-- 🚩 Checkpoint alle 50 m. Berührt ein Tier das Wasser 🌊 → Game Over → Neustart am Checkpoint
+- 🚩 Checkpoint alle 50 m. Berührt ein Tier das Wasser 🌊 → Game Over → 🚩 Neustart am Checkpoint oder 🎲 neue Stage (online ohne neu verbinden, jeder der beiden kann wählen)
 - Jede Welt ist **garantiert kletterbar** und wird bis 300 m schwerer (siehe [Leveldesign](docs/GAME_DESIGN.md#leveldesign-garantiert-kletterbar-schwerer-mit-der-höhe))
 
 ## Entwicklung
