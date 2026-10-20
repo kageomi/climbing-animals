@@ -14,7 +14,7 @@ Game Design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 
 | Geste | Wirkung |
 |---|---|
-| Finger halten | Das nächstgelegene Tier krallt sich fest (nicht auf 🧊 / 🍄) |
+| Finger halten | Das nächstgelegene Tier krallt sich fest (nicht auf 🧊) |
 | Finger ziehen | Zielen – Sprung geht entgegen der Zugrichtung, Länge = Kraft |
 | Loslassen | Springen (nur mit Halt, nicht aus dem Wasser) |
 | Zwei Finger (Solo) | Jeder Finger steuert ein Tier |
