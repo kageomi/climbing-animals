@@ -48,6 +48,7 @@ src/
   jumpsim.ts  Sprung-Simulator für den Generator (Spielphysik nachgebildet)
   worldWorker.ts / workerFeed.ts  Generator läuft in einem Web Worker (kein Ruckeln)
   emoji.ts    Emoji-Sprites und Silhouette → Kollisionskörper
+  assets.ts   Skins: Asset-IDs → Bilder aus public/skins/<name>/ (Emoji als Fallback)
   render.ts   Canvas-Rendering, Kamera, Zielvorschau
   input.ts    Slingshot-Touch-Steuerung (Solo: beide Tiere, online: eigenes Tier)
   net.ts      Online-Verbindung (PeerJS/WebRTC), Heartbeat

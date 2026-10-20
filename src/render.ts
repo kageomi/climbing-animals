@@ -1,7 +1,8 @@
 import { CFG } from './config';
-import { drawEmoji, GLYPH_FILL, sprite } from './emoji';
+import { drawAsset, drawRow } from './assets';
+import { sprite } from './emoji';
 import type { Game } from './game';
-import { MATERIALS, ZONES } from './world';
+import { ZONES } from './world';
 import type { PlatformDef } from './world';
 
 export interface Aim {
@@ -13,7 +14,6 @@ export interface Aim {
 
 /** Gravity per tick in Matter's units (gravity 1 × scale 0.001 × (1000/60)²). */
 const GRAVITY_PER_TICK = 0.001 * (1000 / 60) ** 2;
-const TILE_DRAW = CFG.tile / GLYPH_FILL;
 
 export class Renderer {
   private g: CanvasRenderingContext2D;
@@ -71,7 +71,7 @@ export class Renderer {
     for (const h of game.hazards) {
       if (h.y < top || h.y > bottom) continue;
       const pos = h.kind === 'bee' ? game.beePosition(h) : h;
-      drawEmoji(g, h.kind === 'bee' ? '🐝' : '🌵', pos.x, pos.y, TILE_DRAW);
+      drawAsset(g, h.kind === 'bee' ? 'hazard.bee' : 'hazard.cactus', pos.x, pos.y, CFG.tile);
     }
 
     this.drawWaves(game);
@@ -108,19 +108,17 @@ export class Renderer {
       if (w.bottom < top || w.top > bottom) continue;
       const from = w.top + Math.max(0, Math.floor((top - w.top) / CFG.tile)) * CFG.tile;
       for (let y = from; y < Math.min(w.bottom, bottom); y += CFG.tile) {
-        drawEmoji(this.g, w.emoji, -x, y, TILE_DRAW);
-        drawEmoji(this.g, w.emoji, x, y, TILE_DRAW);
+        drawAsset(this.g, `wall.${w.wall}`, -x, y, CFG.tile);
+        drawAsset(this.g, `wall.${w.wall}`, x, y, CFG.tile);
       }
     }
   }
 
   private drawPlatform(p: PlatformDef, checkpoint: PlatformDef | null): void {
-    const emoji = MATERIALS[p.mat].emoji;
-    const x0 = p.x - ((p.tiles - 1) / 2) * CFG.tile;
-    for (let i = 0; i < p.tiles; i++) drawEmoji(this.g, emoji, x0 + i * CFG.tile, p.y, TILE_DRAW);
+    drawRow(this.g, `platform.${p.mat}`, p.x, p.y, p.tiles, CFG.tile);
     if (p.checkpoint) {
       const reached = checkpoint !== null && p.y >= checkpoint.y;
-      drawEmoji(this.g, reached ? '🏁' : '🚩', p.x, p.y - CFG.tile * 1.1, TILE_DRAW * 1.2);
+      drawAsset(this.g, reached ? 'flag.reached' : 'flag', p.x, p.y - CFG.tile * 1.1, CFG.tile * 1.2);
     }
   }
 
@@ -202,7 +200,7 @@ export class Renderer {
     const w = this.width / this.scale;
     const off = ((game.tick * 0.4) % CFG.tile) - CFG.tile;
     for (let x = left + off; x < left + w + CFG.tile; x += CFG.tile) {
-      drawEmoji(this.g, '🌊', x, CFG.waterY + 2, TILE_DRAW);
+      drawAsset(this.g, 'water.wave', x, CFG.waterY + 2, CFG.tile);
     }
   }
 
