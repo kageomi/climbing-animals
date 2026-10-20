@@ -7,6 +7,7 @@ import { SlingshotInput } from './input';
 import { Session, SnapshotBuffer } from './net';
 import type { Message } from './net';
 import { Renderer } from './render';
+import { WorkerFeed } from './workerFeed';
 
 const ANIMALS = ['🐸', '🐵', '🐱', '🐨', '🐧', '🐷', '🐻', '🐰', '🦊', '🐼', '🐢', '🐍', '🐡', '🦔', '🐌', '🦀'];
 
@@ -73,7 +74,7 @@ function show(name: keyof typeof overlays | null): void {
 
 function startGame(emojis: [string, string], seed: number, m: Mode): void {
   game?.destroy();
-  game = new Game(emojis, seed);
+  game = new Game(emojis, seed, new WorkerFeed(seed));
   mode = m;
   input.own = m === 'solo' ? null : m === 'host' ? 0 : 1;
   queue.length = 0;

@@ -53,9 +53,31 @@ Keine Buttons. Ein Finger pro Spieler (auf dem eigenen Gerät).
 
 ### Elemente (Basis-Version)
 
-- **Material-Effekte**: 🧊 Eis = rutschig, 🍄 Pilz = Trampolin, ☁️ Wolke = von unten durchspringbar.
+- **Material-Effekte**: 🧊 Eis = rutschig (kein Festhalten, man rutscht nach), 🍄 Pilz = Sprungplattform (Landung federt ab und beruhigt sich, Sprung vom Pilz ist 40 % stärker), ☁️ Wolke = von unten durchspringbar.
 - **Gefahren**: 🌵 Kaktus, 🐝 Biene – stoßen das Tier weg.
 - Später: bewegliche Plattformen, Sammelobjekte.
+
+### Leveldesign: garantiert kletterbar, schwerer mit der Höhe
+
+Der Generator (`src/world.ts`) baut einen **Hauptweg** und prüft jeden Schritt mit einem Sprung-Simulator (`src/jumpsim.ts`), der die Spielphysik nachbildet:
+
+- Ein Schritt wird nur angenommen, wenn es einen Sprung dorthin gibt – mit der Tiergröße (inkl. Drehung), dem festhaltenden Partner daneben als Hindernis, der Seil-Reichweite, Abstand zu 🌵/🐝, Sicherheitsabstand über der Zielkante und auf 🧊/🍄 einer sicheren Landung bei lockerem Seil.
+- **Vorausschau**: Von der neuen Plattform muss es mindestens einen weiteren Schritt geben; dieser wird gemerkt und dient als garantierte Notlösung.
+- **Abzweigungen, Kakteen, Bienen** kommen nur dazu, wenn sie keinen der letzten Sprünge und nicht den Weg nach oben blockieren (betroffene Sprünge werden wenn möglich umgeplant).
+- Der Simulator nutzt nur exakt definierte Rechenoperationen → Host und Gast erzeugen auch auf verschiedenen Browsern dieselbe Welt.
+- Der Generator läuft in einem **Web Worker** und hält ~150 m Welt im Voraus bereit; ein Schritt kostet auf langsamen Handys bis ~100 ms, das Spiel ruckelt dadurch nicht.
+
+**Schwierigkeit** steigt bis 300 m und bleibt dann konstant:
+
+| | unten | ab 300 m |
+|---|---|---|
+| Plattformbreite (Hauptweg) | 3–5 Kacheln | 3 Kacheln |
+| Höhenabstand | 70–95 | 100–150 |
+| erlaubte Sprungkraft | ≤ 70 % | ≤ 92 % |
+| Abzweigungen | 50 % der Schritte | 25 % |
+| 🧊/🌵/🐝 | je nach Zone (Berg/Himmel mehr) | |
+
+**Prüfung**: `npm run check:levels` erzeugt 200 Welten bis 500 m und prüft jeden Schritt erneut (läuft in der CI bei jedem PR). Zusätzlich wurden die gefundenen Sprünge in der echten Matter.js-Physik nachgespielt (Partner hält fest, Springer greift nach der Landung zu).
 
 ## 7. Scheitern, Checkpoints, Score
 
@@ -95,4 +117,6 @@ Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher 
 - ✅ Online-Koop: WebRTC/PeerJS, Einladungslink + QR + Raum-Code, Host-Autorität mit Snapshot-Interpolation, Heartbeat/Disconnect-Erkennung
 - ⬜ Client-Prediction für das eigene Tier des Gastes (falls sich die Latenz schlecht anfühlt)
 - ⬜ TURN-Fallback prüfen, falls sich manche Handys nicht verbinden können
+- ✅ Leveldesign: garantiert kletterbarer Hauptweg mit Schwierigkeitskurve bis 300 m
+- ⬜ Koop-Stellen, die nur mit Seil/Partner schaffbar sind (ab mittlerer Höhe) – braucht eine Seil-Simulation im Generator
 - ⬜ Balancing per Playtest
