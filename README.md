@@ -32,7 +32,11 @@ npm install
 npm run dev        # Dev-Server (auch im LAN erreichbar → mit dem Handy testen)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run check:levels   # 200 Welten erzeugen und prüfen, dass jeder Schritt schaffbar ist
+npm test           # Unit-Tests (Vitest): Generator, Sprung-Simulator, RNG, Snapshot-Interpolation
+npm run test:e2e   # E2E (Playwright): Solo- und Online-Abläufe im Browser, inkl. lokalem PeerServer
 ```
+
+Beim ersten Mal ggf. `npx playwright install chromium`.
 
 Stack: Vite + TypeScript + [Matter.js](https://brm.io/matter-js/), Rendering mit Canvas 2D.
 
@@ -46,7 +50,8 @@ src/
   emoji.ts    Emoji-Sprites und Silhouette → Kollisionskörper
   render.ts   Canvas-Rendering, Kamera, Zielvorschau
   input.ts    Slingshot-Touch-Steuerung (Solo: beide Tiere, online: eigenes Tier)
-  net.ts      Online-Verbindung (PeerJS/WebRTC), Heartbeat, Snapshot-Interpolation
+  net.ts      Online-Verbindung (PeerJS/WebRTC), Heartbeat
+  snapshots.ts  Snapshot-Interpolation für den Gast
   main.ts     Menü, Lobby, Game-Loop (fester 60-Hz-Takt)
 ```
 
