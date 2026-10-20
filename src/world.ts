@@ -6,7 +6,6 @@ import { Rng } from './rng';
 export type MaterialId = 'log' | 'lotus' | 'leaf' | 'mushroom' | 'rock' | 'ice' | 'cloud' | 'star';
 
 export interface Material {
-  emoji: string;
   friction: number;
   /** Holding the finger down only anchors on grippable surfaces (ice is too slippery). */
   grippable: boolean;
@@ -17,22 +16,25 @@ export interface Material {
 }
 
 export const MATERIALS: Record<MaterialId, Material> = {
-  log: { emoji: '🪵', friction: 0.8, grippable: true },
-  lotus: { emoji: '🪷', friction: 0.6, grippable: true },
-  leaf: { emoji: '🍃', friction: 0.5, grippable: true },
-  mushroom: { emoji: '🍄', friction: 0.6, grippable: true, bouncy: true },
-  rock: { emoji: '🪨', friction: 0.9, grippable: true },
+  log: { friction: 0.8, grippable: true },
+  lotus: { friction: 0.6, grippable: true },
+  leaf: { friction: 0.5, grippable: true },
+  mushroom: { friction: 0.6, grippable: true, bouncy: true },
+  rock: { friction: 0.9, grippable: true },
   // A little friction so a careful landing can stop before the edge.
-  ice: { emoji: '🧊', friction: 0.05, grippable: false },
-  cloud: { emoji: '☁️', friction: 0.5, grippable: true, oneWay: true },
-  star: { emoji: '🌟', friction: 0.7, grippable: true },
+  ice: { friction: 0.05, grippable: false },
+  cloud: { friction: 0.5, grippable: true, oneWay: true },
+  star: { friction: 0.7, grippable: true },
 };
+
+/** Look of the side walls; the renderer maps it to an asset (see assets.ts). */
+export type WallId = 'reeds' | 'forest' | 'mountain' | 'sky';
 
 export interface Zone {
   /** Zone starts at this height (m). */
   from: number;
   sky: [string, string];
-  wall: string;
+  wall: WallId;
   materials: [MaterialId, number][];
   bees: number;
   cacti: number;
@@ -40,10 +42,10 @@ export interface Zone {
 
 // Pond → forest → mountain → sky.
 export const ZONES: Zone[] = [
-  { from: 0, sky: ['#7ec8e3', '#bfe6c9'], wall: '🌾', materials: [['log', 3], ['lotus', 3], ['leaf', 1]], bees: 0, cacti: 0 },
-  { from: 60, sky: ['#6fb98f', '#cde8b0'], wall: '🌲', materials: [['log', 3], ['leaf', 2], ['mushroom', 1]], bees: 0.18, cacti: 0 },
-  { from: 160, sky: ['#8aa4c8', '#e3e8f0'], wall: '🪨', materials: [['rock', 4], ['ice', 2]], bees: 0.05, cacti: 0.25 },
-  { from: 280, sky: ['#1d2b64', '#6a7fd0'], wall: '☁️', materials: [['cloud', 3], ['star', 2]], bees: 0.12, cacti: 0 },
+  { from: 0, sky: ['#7ec8e3', '#bfe6c9'], wall: 'reeds', materials: [['log', 3], ['lotus', 3], ['leaf', 1]], bees: 0, cacti: 0 },
+  { from: 60, sky: ['#6fb98f', '#cde8b0'], wall: 'forest', materials: [['log', 3], ['leaf', 2], ['mushroom', 1]], bees: 0.18, cacti: 0 },
+  { from: 160, sky: ['#8aa4c8', '#e3e8f0'], wall: 'mountain', materials: [['rock', 4], ['ice', 2]], bees: 0.05, cacti: 0.25 },
+  { from: 280, sky: ['#1d2b64', '#6a7fd0'], wall: 'sky', materials: [['cloud', 3], ['star', 2]], bees: 0.12, cacti: 0 },
 ];
 
 export function zoneAt(meters: number): Zone {
@@ -65,7 +67,7 @@ export interface WallDef {
   /** Vertical span [top, bottom] covered on both sides. */
   top: number;
   bottom: number;
-  emoji: string;
+  wall: WallId;
 }
 
 export interface HazardDef {
@@ -153,7 +155,7 @@ export class WorldGen {
     if (!this.started) {
       this.started = true;
       this.addPlatform(out, START_PLATFORM);
-      out.walls.push({ top: -40, bottom: CFG.waterY + 200, emoji: ZONES[0].wall });
+      out.walls.push({ top: -40, bottom: CFG.waterY + 200, wall: ZONES[0].wall });
     }
     while (this.main.y > yTop) this.addStep(out);
     return out;
@@ -224,7 +226,7 @@ export class WorldGen {
 
     this.addPlatform(out, to, toBox);
     if (cactus) this.addHazard(out, cactus);
-    out.walls.push({ top: to.y - 40, bottom: from.y - 40, emoji: zone.wall });
+    out.walls.push({ top: to.y - 40, bottom: from.y - 40, wall: zone.wall });
     this.steps.push({ from, to, jump, fallback });
     this.plan = plan;
     this.main = to;

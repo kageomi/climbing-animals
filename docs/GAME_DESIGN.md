@@ -102,6 +102,38 @@ Begründung:
 
 Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher bei vielen Sprites, Animationen und Menüs.
 
+### Grafik: Skins statt fest verdrahteter Emojis
+
+Emoji-Kacheln wirken als Bühne unruhig. Damit Grafiken später separat erzeugt und ausgetauscht werden können (geplant: Pixel-Art), kennt das Spiel nur **Asset-IDs**; was gezeichnet wird, legt ein **Skin** fest (`src/assets.ts`).
+
+- Welt und Generator enthalten keine Grafik mehr: Plattformen haben ein Material (`log`, `ice` …), Wände eine `WallId` (`reeds`, `forest`, `mountain`, `sky`).
+- Ein Skin ist ein Ordner `public/skins/<name>/` mit `skin.json` und Bilddateien (SVG oder PNG). Geladen wird `DEFAULT_SKIN`, zum Ausprobieren `?skin=<name>`.
+- **Fehlt eine Grafik oder lädt sie nicht, wird das Emoji gezeichnet** – ein Skin kann also schrittweise gefüllt werden.
+- `"pixelated": true` schaltet die Bildglättung ab (scharfe Pixel-Art bei jeder Skalierung).
+- Plattformen werden als Reihe gezeichnet: optional mit eigener linker/rechter Endkappe, damit sie wie ein Stück aussehen.
+- Jede Grafik füllt genau ihre Kachel (`tile` = 28 Welteinheiten breit, Höhe nach Seitenverhältnis), Flaggen 1,2 Kacheln.
+- **Tiere bleiben Emojis**: Ihre Silhouette ist ihr Kollisionskörper; eigene Tiergrafiken würden die Physik ändern (danach `npm run check:levels`).
+
+```json
+{
+  "pixelated": true,
+  "assets": {
+    "platform.log": { "left": "log-left.png", "mid": "log.png", "right": "log-right.png" },
+    "platform.ice": "ice.png",
+    "wall.forest": "forest-wall.png",
+    "hazard.bee": "bee.png"
+  }
+}
+```
+
+| Asset-ID | Fallback |
+|---|---|
+| `platform.log` / `lotus` / `leaf` / `mushroom` / `rock` / `ice` / `cloud` / `star` | 🪵 🪷 🍃 🍄 🪨 🧊 ☁️ 🌟 |
+| `wall.reeds` / `forest` / `mountain` / `sky` | 🌾 🌲 🪨 ☁️ |
+| `hazard.bee` / `hazard.cactus` | 🐝 🌵 |
+| `flag` / `flag.reached` | 🚩 🏁 |
+| `water.wave` | 🌊 |
+
 ## 9. Offene Punkte für Playtests
 
 - Sprungkraft, Seillänge, Elastizität, Reibung
@@ -120,3 +152,5 @@ Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher 
 - ✅ Leveldesign: garantiert kletterbarer Hauptweg mit Schwierigkeitskurve bis 300 m
 - ⬜ Koop-Stellen, die nur mit Seil/Partner schaffbar sind (ab mittlerer Höhe) – braucht eine Seil-Simulation im Generator
 - ⬜ Balancing per Playtest
+- ✅ Skin-System für Grafiken (Asset-IDs, `skin.json`, Emoji-Fallback, Pixel-Art-Modus)
+- ⬜ Erster eigener Skin (Pixel-Art) für Plattformen, Wände, Wasser, Gefahren

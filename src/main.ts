@@ -1,5 +1,6 @@
 import './style.css';
 import qrcode from 'qrcode-generator';
+import { DEFAULT_SKIN, loadedAssets, loadSkin } from './assets';
 import { TICK_MS } from './config';
 import { Game } from './game';
 import type { Command } from './game';
@@ -60,6 +61,8 @@ let lastSnapshotState: Game['state'] = 'play';
 const snapshots = new SnapshotBuffer();
 
 const renderer = new Renderer(canvas);
+// Until the skin is loaded (or if it fails) the stage is drawn with emojis.
+void loadSkin(new URLSearchParams(location.search).get('skin') ?? DEFAULT_SKIN);
 let game: Game | null = null;
 const queue: Command[] = [];
 const input = new SlingshotInput(canvas, renderer, () => game, (cmd) => {
@@ -335,4 +338,4 @@ if (joinRoom) show('join');
 requestAnimationFrame(frame);
 
 // Expose for debugging/tests in the browser console.
-Object.assign(window, { __game: () => game, __renderer: renderer, __session: () => session });
+Object.assign(window, { __game: () => game, __renderer: renderer, __session: () => session, __assets: loadedAssets });
