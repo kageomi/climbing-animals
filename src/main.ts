@@ -99,10 +99,10 @@ function leaveSession(): void {
   }
 }
 
-function newSeed(): number {
-  // ?seed=N pins the world for debugging.
+function newSeed(fresh = false): number {
+  // ?seed=N pins the first world for debugging; a stage change always rolls a new one.
   const seedParam = new URLSearchParams(location.search).get('seed');
-  return seedParam ? Number(seedParam) >>> 0 : (Math.random() * 2 ** 32) >>> 0;
+  return seedParam && !fresh ? Number(seedParam) >>> 0 : (Math.random() * 2 ** 32) >>> 0;
 }
 
 function partnerLost(): void {
@@ -185,6 +185,8 @@ function onHostMessage(m: Message): void {
     queue.push(m.cmd);
   } else if (m.t === 'retry') {
     retry();
+  } else if (m.t === 'newStage' && game?.state === 'over') {
+    newStage();
   }
 }
 
@@ -250,6 +252,21 @@ function retry(): void {
 }
 
 $('retry').addEventListener('click', retry);
+
+/** New world with the same animals; online the pair stays connected. */
+function newStage(): void {
+  if (!game) return;
+  if (mode === 'guest') {
+    session?.send({ t: 'newStage' });
+    return;
+  }
+  const emojis = game.animals.map((a) => a.emoji) as [string, string];
+  const seed = newSeed(true);
+  if (mode === 'host') session?.send({ t: 'start', seed, emojis });
+  startGame(emojis, seed, mode);
+}
+
+$('new-stage').addEventListener('click', newStage);
 
 function home(): void {
   leaveSession();
