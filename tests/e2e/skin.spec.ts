@@ -22,3 +22,16 @@ test('without a skin everything is drawn as emojis', async ({ page }) => {
   await waitForGame(page);
   expect(await page.evaluate(() => (window as any).__assets())).toEqual([]);
 });
+
+test('the pixel skin loads and the game runs with it', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/?seed=7&skin=pixel');
+  await page.click('#start');
+  await waitForGame(page);
+  await expect.poll(() => page.evaluate(() => (window as any).__assets().length)).toBeGreaterThan(5);
+  const tick = await page.evaluate(() => (window as any).__game().tick);
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => (window as any).__game().tick)).toBeGreaterThan(tick);
+  expect(errors).toEqual([]);
+});

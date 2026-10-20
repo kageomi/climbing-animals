@@ -104,35 +104,43 @@ Alternative: Phaser 3 (Game-Framework mit eingebautem Matter.js) – lohnt eher 
 
 ### Grafik: Skins statt fest verdrahteter Emojis
 
-Emoji-Kacheln wirken als Bühne unruhig. Damit Grafiken später separat erzeugt und ausgetauscht werden können (geplant: Pixel-Art), kennt das Spiel nur **Asset-IDs**; was gezeichnet wird, legt ein **Skin** fest (`src/assets.ts`).
+Emoji-Kacheln wirken als Bühne unruhig. Damit Grafiken separat erzeugt und ausgetauscht werden können, kennt das Spiel nur **Asset-IDs**; was gezeichnet wird und wie, legt ein **Skin** fest (`src/assets.ts`, Renderer in `src/render.ts`).
 
-- Welt und Generator enthalten keine Grafik mehr: Plattformen haben ein Material (`log`, `ice` …), Wände eine `WallId` (`reeds`, `forest`, `mountain`, `sky`).
-- Ein Skin ist ein Ordner `public/skins/<name>/` mit `skin.json` und Bilddateien (SVG oder PNG). Geladen wird `DEFAULT_SKIN`, zum Ausprobieren `?skin=<name>`.
-- **Fehlt eine Grafik oder lädt sie nicht, wird das Emoji gezeichnet** – ein Skin kann also schrittweise gefüllt werden.
-- `"pixelated": true` schaltet die Bildglättung ab (scharfe Pixel-Art bei jeder Skalierung).
-- Plattformen werden als Reihe gezeichnet: optional mit eigener linker/rechter Endkappe, damit sie wie ein Stück aussehen.
-- Jede Grafik füllt genau ihre Kachel (`tile` = 28 Welteinheiten breit, Höhe nach Seitenverhältnis), Flaggen 1,2 Kacheln.
-- **Tiere bleiben Emojis**: Ihre Silhouette ist ihr Kollisionskörper; eigene Tiergrafiken würden die Physik ändern (danach `npm run check:levels`).
+- Welt und Generator enthalten keine Grafik: Plattformen haben ein Material (`log`, `ice` …), Wände die Zone (`pond`, `forest`, `mountain`, `sky`).
+- Ein Skin ist ein Ordner `public/skins/<name>/` mit `skin.json` und Bilddateien (PNG oder SVG). Geladen wird `DEFAULT_SKIN`, zum Ausprobieren `?skin=<name>`.
+- **Alles ist optional.** Fehlt eine Grafik oder lädt sie nicht, wird das Emoji gezeichnet; fehlende Einstellungen nehmen den Emoji-Look (`DEFAULT_LOOK`). Ein Skin kann also schrittweise gefüllt werden.
+- Plattformen werden als Reihe gezeichnet, optional mit eigener linker/rechter Endkappe. Jede Grafik füllt genau ihre Kachel (`tile` = 28 Welteinheiten breit, Höhe nach Seitenverhältnis), Flaggen 1,25 Kacheln. Die rechte Wand wird gespiegelt.
+- **Tiere bleiben Emojis**: Ihre Silhouette ist ihr Kollisionskörper. Im Pixel-Modus werden sie nur verpixelt und umrandet gezeichnet, die Physik bleibt gleich.
 
-```json
-{
-  "pixelated": true,
-  "assets": {
-    "platform.log": { "left": "log-left.png", "mid": "log.png", "right": "log-right.png" },
-    "platform.ice": "ice.png",
-    "wall.forest": "forest-wall.png",
-    "hazard.bee": "bee.png"
-  }
-}
-```
+| Schlüssel | Wirkung |
+|---|---|
+| `pixelated` | Bilder ohne Glättung skalieren |
+| `pixelsPerTile` | > 0: ganze Szene in einen kleinen Puffer zeichnen (so viele Pixel pro Kachel) und hochskalieren – Grafik, Emojis, Seil und Licht liegen auf einem Pixelraster. Die Kamera bewegt sich in ganzen Pixeln. |
+| `lights.<Quelle>` | `{ color, radius }` (Radius in Kacheln). Quellen: `animal`, `firefly` und jede Asset-ID (z. B. `platform.lotus`) |
+| `zones.<Zone>.sky` | Himmelsverlauf oben/unten (Hex-Farben) |
+| `zones.<Zone>.ambient` | Helligkeit abseits von Lichtern (wird mit der Szene multipliziert). Ohne: kein Licht-Effekt |
+| `zones.<Zone>.backdrop` | Hintergrundebenen `{ src, parallax }`, hinten nach vorn, wiederholen sich in beide Richtungen; `parallax` 0 = fest, 1 = bewegt sich mit der Welt |
+| `zones.<Zone>.fireflies` | Glühwürmchen pro 10 m |
+| `water` | `{ color, reflection }` – Spiegelung der Szene im Wasser (nur Pixel-Modus) |
+| `assets.<Asset-ID>` | Datei, oder `{ left?, mid, right? }` für Reihen mit Endkappen |
+
+Zonen gehen über 20 m ineinander über (Himmel, Helligkeit, Hintergrund).
 
 | Asset-ID | Fallback |
 |---|---|
 | `platform.log` / `lotus` / `leaf` / `mushroom` / `rock` / `ice` / `cloud` / `star` | 🪵 🪷 🍃 🍄 🪨 🧊 ☁️ 🌟 |
-| `wall.reeds` / `forest` / `mountain` / `sky` | 🌾 🌲 🪨 ☁️ |
+| `wall.pond` / `forest` / `mountain` / `sky` | 🌾 🌲 🪨 ☁️ |
 | `hazard.bee` / `hazard.cactus` | 🐝 🌵 |
 | `flag` / `flag.reached` | 🚩 🏁 |
 | `water.wave` | 🌊 |
+
+#### Pixel-Skin (`?skin=pixel`, in Arbeit)
+
+Stil-Vorbilder: **Inmost**, **Animal Well** – dunkel, wenige Farben, Licht als Stimmungsträger. Nacht-Aufstieg: dunkler Teich mit Spiegelung, leuchtende Lotusblüten und Glühwürmchen → leuchtende Pilze im Wald → kaltes Licht am Berg → Sterne am Himmel. Die Tiere tragen einen warmen Lichtschein, damit sie im Dunkeln immer sichtbar sind. **Lesbarkeit geht vor Stimmung**: Materialien und Gefahren müssen auch im Dunkeln klar unterscheidbar sein.
+
+- 16 px pro Kachel (Puffer ca. 240 px breit), Palette **ENDESGA 32** (Lospec).
+- Quellen in `art/pixel/`: Kacheln als Text-Raster (`<datei>.txt`, ein Zeichen pro Pixel, Farben in `palette.json`, `mirror <andere>` spiegelt), Hintergrundebenen prozedural in `scripts/pixel-art.mjs`. `npm run art` erzeugt daraus die PNGs in `public/skins/pixel/`; ein Unit-Test prüft, dass sie aktuell sind. Eine PNG kann jederzeit durch eine handgezeichnete ersetzt werden – dann ihre Quelle löschen.
+- Stand: Teich fertig (Holz, Lotus, Blatt, Schilfwand, Wellen, Flaggen, 3 Hintergrundebenen, Glühwürmchen, Spiegelung). Wald, Berg, Himmel haben nur Nachtfarben und Lichter; ihre Kacheln sind noch verpixelte Emojis.
 
 ## 9. Offene Punkte für Playtests
 
@@ -153,4 +161,4 @@ Emoji-Kacheln wirken als Bühne unruhig. Damit Grafiken später separat erzeugt 
 - ⬜ Koop-Stellen, die nur mit Seil/Partner schaffbar sind (ab mittlerer Höhe) – braucht eine Seil-Simulation im Generator
 - ⬜ Balancing per Playtest
 - ✅ Skin-System für Grafiken (Asset-IDs, `skin.json`, Emoji-Fallback, Pixel-Art-Modus)
-- ⬜ Erster eigener Skin (Pixel-Art) für Plattformen, Wände, Wasser, Gefahren
+- 🟨 Pixel-Skin im Stil von Inmost/Animal Well: Renderer (Pixelpuffer, Licht, Spiegelung, Parallax, Glühwürmchen) und Teich fertig; Wald, Berg, Himmel offen

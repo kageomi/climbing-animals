@@ -27,14 +27,13 @@ export const MATERIALS: Record<MaterialId, Material> = {
   star: { friction: 0.7, grippable: true },
 };
 
-/** Look of the side walls; the renderer maps it to an asset (see assets.ts). */
-export type WallId = 'reeds' | 'forest' | 'mountain' | 'sky';
+/** The skin decides how a zone looks (sky, walls, light; see assets.ts). */
+export type ZoneId = 'pond' | 'forest' | 'mountain' | 'sky';
 
 export interface Zone {
+  id: ZoneId;
   /** Zone starts at this height (m). */
   from: number;
-  sky: [string, string];
-  wall: WallId;
   materials: [MaterialId, number][];
   bees: number;
   cacti: number;
@@ -42,10 +41,10 @@ export interface Zone {
 
 // Pond → forest → mountain → sky.
 export const ZONES: Zone[] = [
-  { from: 0, sky: ['#7ec8e3', '#bfe6c9'], wall: 'reeds', materials: [['log', 3], ['lotus', 3], ['leaf', 1]], bees: 0, cacti: 0 },
-  { from: 60, sky: ['#6fb98f', '#cde8b0'], wall: 'forest', materials: [['log', 3], ['leaf', 2], ['mushroom', 1]], bees: 0.18, cacti: 0 },
-  { from: 160, sky: ['#8aa4c8', '#e3e8f0'], wall: 'mountain', materials: [['rock', 4], ['ice', 2]], bees: 0.05, cacti: 0.25 },
-  { from: 280, sky: ['#1d2b64', '#6a7fd0'], wall: 'sky', materials: [['cloud', 3], ['star', 2]], bees: 0.12, cacti: 0 },
+  { id: 'pond', from: 0, materials: [['log', 3], ['lotus', 3], ['leaf', 1]], bees: 0, cacti: 0 },
+  { id: 'forest', from: 60, materials: [['log', 3], ['leaf', 2], ['mushroom', 1]], bees: 0.18, cacti: 0 },
+  { id: 'mountain', from: 160, materials: [['rock', 4], ['ice', 2]], bees: 0.05, cacti: 0.25 },
+  { id: 'sky', from: 280, materials: [['cloud', 3], ['star', 2]], bees: 0.12, cacti: 0 },
 ];
 
 export function zoneAt(meters: number): Zone {
@@ -67,7 +66,7 @@ export interface WallDef {
   /** Vertical span [top, bottom] covered on both sides. */
   top: number;
   bottom: number;
-  wall: WallId;
+  zone: ZoneId;
 }
 
 export interface HazardDef {
@@ -155,7 +154,7 @@ export class WorldGen {
     if (!this.started) {
       this.started = true;
       this.addPlatform(out, START_PLATFORM);
-      out.walls.push({ top: -40, bottom: CFG.waterY + 200, wall: ZONES[0].wall });
+      out.walls.push({ top: -40, bottom: CFG.waterY + 200, zone: ZONES[0].id });
     }
     while (this.main.y > yTop) this.addStep(out);
     return out;
@@ -226,7 +225,7 @@ export class WorldGen {
 
     this.addPlatform(out, to, toBox);
     if (cactus) this.addHazard(out, cactus);
-    out.walls.push({ top: to.y - 40, bottom: from.y - 40, wall: zone.wall });
+    out.walls.push({ top: to.y - 40, bottom: from.y - 40, zone: zone.id });
     this.steps.push({ from, to, jump, fallback });
     this.plan = plan;
     this.main = to;
