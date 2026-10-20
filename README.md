@@ -32,6 +32,7 @@ npm install
 npm run dev        # Dev-Server (auch im LAN erreichbar → mit dem Handy testen)
 npm run build      # Typecheck + Produktions-Build nach dist/
 npm run check:levels   # 200 Welten erzeugen und prüfen, dass jeder Schritt schaffbar ist
+npm run art        # Pixel-Art aus art/pixel/ nach public/skins/pixel/ (PNG) erzeugen
 npm test           # Unit-Tests (Vitest): Generator, Sprung-Simulator, RNG, Snapshot-Interpolation
 npm run test:e2e   # E2E (Playwright): Solo- und Online-Abläufe im Browser, inkl. lokalem PeerServer
 ```
@@ -48,8 +49,8 @@ src/
   jumpsim.ts  Sprung-Simulator für den Generator (Spielphysik nachgebildet)
   worldWorker.ts / workerFeed.ts  Generator läuft in einem Web Worker (kein Ruckeln)
   emoji.ts    Emoji-Sprites und Silhouette → Kollisionskörper
-  assets.ts   Skins: Asset-IDs → Bilder aus public/skins/<name>/ (Emoji als Fallback)
-  render.ts   Canvas-Rendering, Kamera, Zielvorschau
+  assets.ts   Skins: Asset-IDs → Bilder aus public/skins/<name>/ (Emoji als Fallback), Licht, Zonen-Look
+  render.ts   Canvas-Rendering, Kamera, Zielvorschau; Pixel-Modus mit Licht und Wasserspiegelung
   input.ts    Slingshot-Touch-Steuerung (Solo: beide Tiere, online: eigenes Tier)
   net.ts      Online-Verbindung (PeerJS/WebRTC), Heartbeat
   snapshots.ts  Snapshot-Interpolation für den Gast

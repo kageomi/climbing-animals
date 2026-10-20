@@ -22,6 +22,41 @@ export function sprite(emoji: string): HTMLCanvasElement {
   return c;
 }
 
+const pixelSprites = new Map<string, HTMLCanvasElement>();
+
+/**
+ * The emoji's sprite shrunk to `px` × `px` with hard edges (no half-transparent
+ * pixels), for pixel-art rendering. With `outline`, a 1 px border in that colour
+ * is added around it, so the canvas is `px + 2` wide.
+ */
+export function pixelSprite(emoji: string, px: number, outline?: string): HTMLCanvasElement {
+  const key = `${emoji}|${px}|${outline ?? ''}`;
+  let c = pixelSprites.get(key);
+  if (c) return c;
+  const small = document.createElement('canvas');
+  small.width = small.height = px;
+  const sg = small.getContext('2d')!;
+  sg.imageSmoothingQuality = 'high';
+  sg.drawImage(sprite(emoji), 0, 0, px, px);
+  const img = sg.getImageData(0, 0, px, px);
+  for (let i = 3; i < img.data.length; i += 4) img.data[i] = img.data[i] >= 128 ? 255 : 0;
+  sg.putImageData(img, 0, 0);
+  c = small;
+  if (outline) {
+    c = document.createElement('canvas');
+    c.width = c.height = px + 2;
+    const g = c.getContext('2d')!;
+    for (const [dx, dy] of [[0, 1], [2, 1], [1, 0], [1, 2]]) g.drawImage(small, dx, dy);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = outline;
+    g.fillRect(0, 0, px + 2, px + 2);
+    g.globalCompositeOperation = 'source-over';
+    g.drawImage(small, 1, 1);
+  }
+  pixelSprites.set(key, c);
+  return c;
+}
+
 /** Draws an emoji centred at (x, y) so its sprite spans `size` world units. */
 export function drawEmoji(g: CanvasRenderingContext2D, emoji: string, x: number, y: number, size: number): void {
   g.drawImage(sprite(emoji), x - size / 2, y - size / 2, size, size);

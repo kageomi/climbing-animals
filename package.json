@@ -9,6 +9,7 @@
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "check:levels": "node scripts/check-levels.mjs",
+    "art": "node scripts/pixel-art.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

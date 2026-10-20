@@ -1,0 +1,113 @@
+{
+  "pixelated": true,
+  "pixelsPerTile": 16,
+  "lights": {
+    "animal": {
+      "color": "#ead4aa",
+      "radius": 3.5
+    },
+    "firefly": {
+      "color": "#fee761",
+      "radius": 1.2
+    },
+    "platform.lotus": {
+      "color": "#f6757a",
+      "radius": 1.4
+    },
+    "flag": {
+      "color": "#e43b44",
+      "radius": 1.8
+    },
+    "flag.reached": {
+      "color": "#c0cbdc",
+      "radius": 1.8
+    },
+    "platform.mushroom": {
+      "color": "#e43b44",
+      "radius": 1.3
+    },
+    "platform.ice": {
+      "color": "#2ce8f5",
+      "radius": 0.9
+    },
+    "platform.star": {
+      "color": "#fee761",
+      "radius": 1.6
+    },
+    "hazard.bee": {
+      "color": "#feae34",
+      "radius": 1.0
+    }
+  },
+  "zones": {
+    "pond": {
+      "sky": [
+        "#181425",
+        "#3a4466"
+      ],
+      "ambient": "#5a6988",
+      "fireflies": 6,
+      "backdrop": [
+        {
+          "src": "pond-stars.png",
+          "parallax": 0.1
+        },
+        {
+          "src": "pond-far.png",
+          "parallax": 0.3
+        },
+        {
+          "src": "pond-near.png",
+          "parallax": 0.6
+        }
+      ]
+    },
+    "forest": {
+      "sky": [
+        "#181425",
+        "#193c3e"
+      ],
+      "ambient": "#5a6988",
+      "fireflies": 4
+    },
+    "mountain": {
+      "sky": [
+        "#181425",
+        "#3a4466"
+      ],
+      "ambient": "#8b9bb4"
+    },
+    "sky": {
+      "sky": [
+        "#0b0a16",
+        "#262b44"
+      ],
+      "ambient": "#8b9bb4"
+    }
+  },
+  "water": {
+    "color": "rgba(18, 40, 80, 0.6)",
+    "reflection": true
+  },
+  "assets": {
+    "platform.log": {
+      "left": "platform-log-left.png",
+      "mid": "platform-log-mid.png",
+      "right": "platform-log-right.png"
+    },
+    "platform.lotus": {
+      "left": "platform-lotus-left.png",
+      "mid": "platform-lotus-mid.png",
+      "right": "platform-lotus-right.png"
+    },
+    "platform.leaf": {
+      "left": "platform-leaf-left.png",
+      "mid": "platform-leaf-mid.png",
+      "right": "platform-leaf-right.png"
+    },
+    "wall.pond": "wall-pond.png",
+    "water.wave": "water-wave.png",
+    "flag": "flag.png",
+    "flag.reached": "flag-reached.png"
+  }
+}

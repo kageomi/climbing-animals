@@ -19,6 +19,7 @@ Die CI (`.github/workflows/ci.yml`) führt alles bei jedem PR aus. Ein Push auf 
 - **Simulation nur über Commands** (`grip`/`jump`) in festen Ticks; im Online-Modus simuliert nur der Host.
 - **Physik-Änderungen** (Sprungkraft, Seil, Tiergröße, Materialien) können generierte Sprünge ungültig machen: danach `npm run check:levels` laufen lassen und ggf. Konstanten in `jumpsim.ts` nachkalibrieren.
 - **UI ohne Text**: nur Emojis/Icons; Buttons bekommen ein `aria-label`.
+- **Grafik nur über Skins** (`src/assets.ts`, `public/skins/`): keine Emojis/Farben in `world.ts`. Pixel-Art-Quellen liegen in `art/pixel/`; nach Änderungen `npm run art` (ein Unit-Test prüft, dass die PNGs aktuell sind).
 
 ## Tests schreiben
 
